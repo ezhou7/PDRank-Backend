@@ -1,5 +1,6 @@
 from parser import PDParser
 from structure import Document, aggregate_maps
+from cluster import Clustering
 
 
 def main():
@@ -13,6 +14,8 @@ def main():
     doc = Document(text)
     aggr_map = aggregate_maps([doc.bow_map])
     doc.vectorize(aggr_map)
+
+    Clustering.k_means(doc.bow_vec)
 
 if __name__ == "__main__":
     main()
