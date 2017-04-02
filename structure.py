@@ -8,6 +8,9 @@ class Document:
         self.text = text
         self.bow_map = None
         self.bow_vec = None
+        self.title = None
+        self.date = None
+        self.cluster = None
 
         self._to_bag_of_words()
 
