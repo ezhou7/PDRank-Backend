@@ -9,9 +9,11 @@ from pdfminer.converter import TextConverter
 from pdfminer.pdfpage import PDFPage, PDFTextExtractionNotAllowed
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 
+from structure import Document
+
 
 class PDParser:
-    def __init__(self, infile_path=None, outfile_path=None):
+    def __init__(self, infile_path: str=None, outfile_path: str=None):
         self.infile_path = infile_path
         self.outfile_path = outfile_path
 
@@ -29,7 +31,7 @@ class PDParser:
         if self.outfile_path is not None:
             self.open_file(self.outfile_path, "o")
 
-    def open_file(self, file_path=None, io_func="i"):
+    def open_file(self, file_path: str=None, io_func: str="i"):
         if file_path is not None:
             if io_func == "i":
                 fin = open(file_path, "rb")
@@ -46,7 +48,7 @@ class PDParser:
         else:
             print("Please fill in the file input parameter.")
 
-    def attach_fstream(self, fstream=None, io_func="i"):
+    def attach_fstream(self, fstream=None, io_func: str="i"):
         if fstream is None:
             print("Please fill in the file stream input parameter.")
             return
@@ -66,7 +68,7 @@ class PDParser:
         if self.pdf_parser is not None:
             self.pdf_parser.close()
 
-    def parse_pdf(self, password=""):
+    def parse_pdf(self, password: str=""):
         if self.fin is None:
             print("PDParse class - parse_pdf() Error:")
             print("Fatal: No pdf file provided.")
@@ -89,6 +91,6 @@ class PDParser:
         pdf_device.close()
 
         if isinstance(self.fout, StringIO):
-            return self.fout.getvalue()
+            return Document(text=self.fout.getvalue())
         else:
             return None
