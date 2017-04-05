@@ -1,7 +1,7 @@
 import spacy
 import numpy as np
 import pickle
-import re
+
 
 class Document:
     def __init__(self, text=""):
@@ -14,11 +14,6 @@ class Document:
 
         self._to_bag_of_words()
 
-        self.title = None
-        self.day = None
-        self.month = None
-        self.year = None
-
     def import_text(self, text):
         self.text = text
 
@@ -29,13 +24,6 @@ class Document:
 
     def import_ifstream(self, ifstream):
         self.text = ifstream.read()
-
-    def extract_title(self, text):
-        searchObj = re.search(r'',text,re.M|re.I)
-        if searchObj:
-            self.title = searchObj.group()
-        else:
-            self.title = 'N/A'
 
     def _to_bag_of_words(self):
         eng_model = spacy.load("en")

@@ -1,10 +1,9 @@
-from parser import PDParser
 from structure import Document, aggregate_maps
 from cluster import DocumentClustering
-
+from parser import PDParser
 
 def main():
-    path = "/Users/ezhou7/Downloads/brain_002.pdf"
+    path = r"C:\Users\Chris\Documents\Christopher\Research\Malaria Research\General\The pathogenic basis of malaria.pdf"
     pdf_parser = PDParser(infile_path=path)
 
     text = pdf_parser.parse_pdf(password="")
