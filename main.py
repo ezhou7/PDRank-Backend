@@ -21,6 +21,7 @@ def main():
 
 def main_loop():
     while True:
+        break
         # TODO: Listen to requests from rails server
         pass
 

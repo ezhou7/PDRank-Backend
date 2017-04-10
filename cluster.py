@@ -13,6 +13,8 @@ class DocumentClustering:
         self.buffer = []
         self.clusters = None
         self.k = k if k != -1 else (7 if len(docs) >= 7 else len(docs))
+        self.w2i_map = {}
+        self.counter = 0
 
         self._k_means()
 
@@ -20,9 +22,21 @@ class DocumentClustering:
         if len(self.buffer) > 20:
             self.docs.extend(self.buffer)
             self.doc_vecs.extend([d.bow_vec for d in self.buffer])
+
             self.buffer = []
 
+            self._standardize()
             self._k_means()
+
+    def _standardize(self):
+        for doc in self.docs:
+            for word in doc.bow_map.keys():
+                if word not in self.w2i_map:
+                    self.w2i_map[word] = self.counter
+                    self.counter += 1
+
+        for doc in self.docs:
+            doc.vectorize(self.w2i_map)
 
     def add_doc(self, doc: Document):
         self.buffer.append(doc)
