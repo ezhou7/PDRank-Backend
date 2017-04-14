@@ -17,7 +17,7 @@ def test_document():
 
 
 def test_parser():
-    path = "/Users/ezhou7/Downloads/brain_002.pdf"
+    path = "../resources/brain_002.pdf"
 
     if not test_path(path):
         return
