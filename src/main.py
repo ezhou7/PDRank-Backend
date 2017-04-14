@@ -11,7 +11,7 @@ from properties import Properties
 
 
 def main():
-    path = "/Users/ezhou7/Documents/Emory/Junior/Spring/CS370/project/biomedical_pdf/cancer/breast/"
+    path = "../resources/cancer/breast/"
     props = Properties(indir_path=path)
 
     pipeline = Pipeline(props)
