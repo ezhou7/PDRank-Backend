@@ -13,6 +13,7 @@ class DocumentClustering:
         self.buffer = []
         self.clusters = None
         self.k = k if k != -1 else (7 if len(docs) >= 7 else len(docs))
+
         self.w2i_map = {}
         self.counter = 0
 

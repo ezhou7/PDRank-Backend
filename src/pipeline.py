@@ -33,7 +33,7 @@ class Pipeline:
         return doc
 
     def _parse_files(self, indir_path: str):
-        return [self._parse_file(f) for f in os.listdir(indir_path)]
+        return [self._parse_file(indir_path + f) for f in os.listdir(indir_path)]
 
     def _annotate_doc(self, doc: Document):
         if self.annotation is None:
