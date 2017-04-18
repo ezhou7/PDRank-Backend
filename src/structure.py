@@ -12,8 +12,6 @@ class Document:
         self.date = None
         self.cluster = None
 
-        self._to_bag_of_words()
-
     def import_text(self, text):
         self.text = text
 
@@ -44,6 +42,19 @@ class Document:
 
         for lemma in self.bow_map.keys():
             self.bow_vec[word_index_map[lemma]] = self.bow_map[lemma]
+
+
+class Cluster:
+    def __init__(self, docs=None):
+        self.docs = docs
+        self.aggr_vec = self._aggregate()
+
+    def _aggregate(self):
+        if len(self.docs) == 0:
+            return np.zeros(shape=self.docs[0].bow_vec.shape)
+
+        doc_stack = np.vstack([doc.bow_vec for doc in self.docs])
+        return np.sum(doc_stack, axis=0)
 
 
 class PersistentIndexMap:

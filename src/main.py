@@ -2,6 +2,7 @@ import os
 import sys
 import socket
 
+from devices import *
 from pipeline import Pipeline
 from properties import Properties
 
@@ -40,7 +41,8 @@ class MainDriver:
 
         self._props = None
         self._pipeline = None
-        self._clusters = None
+        self._cluster_device = None
+        self._retrieval_device = None
 
         self._docs_path = docs_path
 
@@ -59,6 +61,10 @@ class MainDriver:
 
         while True:
             cmd_num = self.p_socket.recv(4)
+
+            if not cmd_num:
+                continue
+
             cmd = int.from_bytes(cmd_num, sys.byteorder, signed=True)
 
             self.__interpret(cmd)
@@ -66,6 +72,10 @@ class MainDriver:
             if self.initialize:
                 self._props = Properties(indir_path=self._docs_path)
                 self._pipeline = Pipeline(self._props)
+
+                self._cluster_device = self._pipeline.doc_clustering
+                lang_model = self._pipeline.annotator.model
+                self._retrieval_device = RetrievalDevice(self._cluster_device, lang_model)
 
             if self.tear_down:
                 self.__tear_down()
@@ -93,7 +103,17 @@ class MainDriver:
         self.p_socket.close()
 
     def __fetch_cluster(self):
-        pass
+        buf = ""
+
+        while True:
+            user_input = self.p_socket.recv(512)
+            buf += user_input.decode("utf-8")
+
+            if len(buf) > 2048:
+                break
+
+        cluster = self._retrieval_device.fetch_cluster(buf)
+        return ProcessingDevice.process_cluster(cluster)
 
 if __name__ == "__main__":
     main()

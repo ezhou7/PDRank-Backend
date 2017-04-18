@@ -12,7 +12,7 @@ class Pipeline:
     def __init__(self, props: Properties=Properties()):
         self.props = props
         self.parser = None
-        self.annotation = None
+        self.annotator = None
         self.doc_clustering = None
 
         docs = None
@@ -36,10 +36,10 @@ class Pipeline:
         return [self._parse_file(indir_path + f) for f in os.listdir(indir_path)]
 
     def _annotate_doc(self, doc: Document):
-        if self.annotation is None:
-            self.annotation = Annotator()
+        if self.annotator is None:
+            self.annotator = Annotator()
 
-        self.annotation.fill_out_doc(doc)
+        self.annotator.fill_out_doc(doc)
 
     def _annotate_docs(self, docs: List[Document]):
         for doc in docs:
