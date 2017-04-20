@@ -12,7 +12,7 @@ from properties import Properties
 
 
 def main():
-    path = "../resources/cancer/breast/"
+    path = "/Users/ezhou7/PycharmProjects/cs370/resources/cancer/breast/"
     props = Properties(indir_path=path)
 
     pipeline = Pipeline(props)
