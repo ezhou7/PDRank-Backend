@@ -1,36 +1,40 @@
 import os
 
-from devices import *
+from devices import Processor
 from pipeline import Pipeline
 from properties import Properties
 
 
 def main():
     path = "/Users/ezhou7/PycharmProjects/cs370/resources/cancer/breast/"
-    props = Properties(indir_path=path)
+    MainDriver(docs_path=path)
 
-    pipeline = Pipeline(props)
-
-    kmeans_engine = pipeline.doc_clustering
-
-    print([str(c) for c in kmeans_engine.clusters])
+    # props = Properties(indir_path=path)
+    #
+    # pipeline = Pipeline(props)
+    #
+    # kmeans_engine = pipeline.doc_clustering
+    #
+    # print([str(c) for c in kmeans_engine.clusters])
 
 
 class MainDriver:
     def __init__(self, docs_path: str=None):
-        self._props = None
-        self._pipeline = None
+        self._props = Properties(indir_path=docs_path)
+        self._pipeline = Pipeline(self._props)
+        self._processor = Processor(clusterer=self._pipeline.doc_clustering, annotator=self._pipeline.annotator)
 
         self._docs_path = docs_path
 
-        self.input_path = "/Users/ezhou7/PycharmProjects/cs370/resources/user_input.txt"
-        self.output_path = "/Users/ezhou7/PycharmProjects/cs370/resources/output.txt"
+        self._input_path = "/Users/ezhou7/PycharmProjects/cs370/resources/user_input.txt"
+        self._output_path = "/Users/ezhou7/PycharmProjects/cs370/resources/output.txt"
+        self._exit_path = "/Users/ezhou7/PycharmProjects/cs370/resources/exit.txt"
 
     def _input_exists(self):
-        return os.path.exists(self.input_path)
+        return os.path.exists(self._input_path)
 
     def _read_input(self):
-        fin = open(self.input_path, "r")
+        fin = open(self._input_path, "r")
         data = "".join([line for line in fin])
         fin.close()
 
@@ -38,27 +42,19 @@ class MainDriver:
 
     def _process_search(self):
         user_input = self._read_input()
-        if user_input:
-            pass
 
-        os.remove(self.input_path)
+        if user_input:
+            self._processor.fetch_cluster(user_input)
+
+        os.remove(self._input_path)
+
+    def _quit(self):
+        return os.path.exists(self._exit_path)
 
     def main_loop(self):
-        while True:
+        while not self._quit():
             if self._input_exists():
                 self._process_search()
 
 if __name__ == "__main__":
-    # fin = open("/Users/ezhou7/PycharmProjects/cs370/resources/user_input.txt", "r")
-    #
-    # buf = []
-    #
-    # for line in fin:
-    #     buf.append(line)
-    #
-    # data = "".join(buf)
-    # print(data)
-    #
-    # fin.close()
-
     main()
