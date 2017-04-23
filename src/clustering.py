@@ -13,7 +13,7 @@ class DocumentClustering:
         self.clusters = None
         self.k = k if k != -1 else (7 if len(docs) >= 7 else len(docs))
 
-        self.w2i_map = {}
+        self.w2i_map = None
 
         self._update_state()
 
@@ -28,7 +28,7 @@ class DocumentClustering:
 
     def _standardize(self):
         word_list = list(set().union(*[d.bow_map.keys() for d in self.docs]))
-        self.w2i_map = {w: i for i, w in enumerate(word_list)}
+        self.w2i_map = Counter({w: i for i, w in enumerate(word_list)})
 
         for d in self.docs:
             d.vectorize(self.w2i_map)

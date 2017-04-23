@@ -7,7 +7,8 @@ from properties import Properties
 
 def main():
     path = "/Users/ezhou7/PycharmProjects/cs370/resources/cancer/breast/"
-    MainDriver(docs_path=path)
+    engine = MainDriver(docs_path=path)
+    engine.main_loop()
 
     # props = Properties(indir_path=path)
     #
@@ -52,7 +53,11 @@ class MainDriver:
         return os.path.exists(self._exit_path)
 
     def main_loop(self):
-        while not self._quit():
+        while True:
+            if self._quit():
+                os.remove(self._exit_path)
+                break
+
             if self._input_exists():
                 self._process_search()
 

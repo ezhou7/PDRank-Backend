@@ -70,4 +70,5 @@ class Cluster:
             return np.zeros(shape=self.docs[0].bow_vec.shape)
 
         doc_stack = np.vstack([doc.bow_vec for doc in self.docs])
-        return np.sum(doc_stack, axis=0)
+
+        return np.sum(doc_stack, axis=0) # , sum([d.bow_map for d in self.docs], Counter())
