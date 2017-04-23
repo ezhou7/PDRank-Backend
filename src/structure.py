@@ -11,13 +11,14 @@ class DateIndex(IntEnum):
 
 
 class Document:
-    def __init__(self, text=""):
+    def __init__(self, text="", doc_path=None):
         self.text = text
         self.bow_map = None
         self.bow_vec = None
         self.title = None
         self.date = None
         self.cluster = None
+        self.doc_path = doc_path
 
     def __str__(self):
         date = "%d/%d/%d" % (self.date[DateIndex.month], self.date[DateIndex.day], self.date[DateIndex.year])

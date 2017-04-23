@@ -91,6 +91,6 @@ class PDParser:
         pdf_device.close()
 
         if isinstance(self.fout, StringIO):
-            return Document(text=self.fout.getvalue())
+            return Document(text=self.fout.getvalue(), doc_path=self.infile_path)
         else:
             return None

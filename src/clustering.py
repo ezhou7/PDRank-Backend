@@ -52,7 +52,7 @@ class DocumentClustering:
         code_book, _ = kmeans(whitened, self.k)
         cluster_nums, _ = vq(whitened, code_book)
 
-        print(cluster_nums)
+        # print(cluster_nums)
 
         clusters = [[] for _ in range(len(set(cluster_nums)))]
         self.clusters = []

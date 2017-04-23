@@ -10,14 +10,6 @@ def main():
     engine = MainDriver(docs_path=path)
     engine.main_loop()
 
-    # props = Properties(indir_path=path)
-    #
-    # pipeline = Pipeline(props)
-    #
-    # kmeans_engine = pipeline.doc_clustering
-    #
-    # print([str(c) for c in kmeans_engine.clusters])
-
 
 class MainDriver:
     def __init__(self, docs_path: str=None):
@@ -27,16 +19,28 @@ class MainDriver:
 
         self._docs_path = docs_path
 
+        self._input_toggle = "/Users/ezhou7/PycharmProjects/cs370/resources/input.txt"
+        self._output_toggle = "/Users/ezhou7/PycharmProjects/cs370/resources/output.txt"
+
         self._input_path = "/Users/ezhou7/PycharmProjects/cs370/resources/user_input.txt"
-        self._output_path = "/Users/ezhou7/PycharmProjects/cs370/resources/output.txt"
-        self._exit_path = "/Users/ezhou7/PycharmProjects/cs370/resources/exit.txt"
+        self._output_path = "/Users/ezhou7/PycharmProjects/cs370/resources/prog_output.txt"
+
+        self._exit_toggle = "/Users/ezhou7/PycharmProjects/cs370/resources/exit.txt"
 
     def _input_exists(self):
-        return os.path.exists(self._input_path)
+        return os.path.exists(self._input_toggle)
 
     def _read_input(self):
         fin = open(self._input_path, "r")
-        data = "".join([line for line in fin])
+
+        buf = []
+        for line in fin:
+            # print(line)
+            buf.append(line.strip())
+
+        data = "".join(buf)
+        # print(data)
+
         fin.close()
 
         return data
@@ -45,17 +49,33 @@ class MainDriver:
         user_input = self._read_input()
 
         if user_input:
-            self._processor.fetch_cluster(user_input)
+            c = self._processor.fetch_cluster(user_input)
 
-        os.remove(self._input_path)
+            if c:
+                # for doc in c.docs:
+                    # print(doc.doc_path)
+                fout = open(self._output_path, "w")
+
+                for doc in c.docs:
+                    fout.write("%s\n" % doc.doc_path)
+
+                fout.close()
+
+                fout = open(self._output_toggle, "w")
+                fout.close()
+
+            os.remove(self._input_path)
+            os.remove(self._input_toggle)
 
     def _quit(self):
-        return os.path.exists(self._exit_path)
+        return os.path.exists(self._exit_toggle)
 
     def main_loop(self):
+        print("Ready")
+
         while True:
             if self._quit():
-                os.remove(self._exit_path)
+                os.remove(self._exit_toggle)
                 break
 
             if self._input_exists():
