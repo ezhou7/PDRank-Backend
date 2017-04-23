@@ -5,7 +5,7 @@ from parser import PDParser
 from structure import Document
 from annotation import Annotator
 from properties import Properties
-from cluster import DocumentClustering
+from clustering import DocumentClustering
 
 
 class Pipeline:

@@ -1,7 +1,7 @@
 import re
 import spacy
-
 from typing import List, Tuple
+from collections import Counter
 
 from structure import Document
 
@@ -17,22 +17,11 @@ class Annotator:
         self.extract_date(doc)
 
     def lemmatize_doc(self, doc: Document) -> List[str]:
-        return [token.lemma_ if not token.is_stop else None for token in self.model(doc.text)]
+        return [t.lemma_ for t in self.model(doc.text) if not t.is_stop]
 
     def doc_to_bow(self, doc: Document):
         lemmas = self.lemmatize_doc(doc)
-
-        if not doc.bow_map:
-            doc.bow_map = dict()
-
-        for lemma in lemmas:
-            if lemma is not None:
-                stripped = lemma.strip()
-
-                if stripped not in doc.bow_map:
-                    doc.bow_map[stripped] = 1
-                else:
-                    doc.bow_map[stripped] += 1
+        doc.bow_map = Counter(lemmas)
 
     def extract_title(self, doc: Document):
         not_title = re.compile("\\W+")
@@ -56,7 +45,6 @@ class Annotator:
             para_sz += 1
 
         doc.title = " ".join(para) if para is not None else ""
-        print(doc.title)
 
     def extract_date(self, doc: Document):
         doc.date = self._extract_max_date(doc)
@@ -70,12 +58,6 @@ class Annotator:
         # US date style (i.e. "Jan. 1, 2017")
         us_full_date = re.compile("(\\w+ \\d{1,2},? \\d{4})")
 
-        # STD date style (i.e. "1 Jan., 2017")
-        # eu_full_date = re.compile("(\\d{1,2} \\w+,? \\d{4})")
-
-        # Only month and year (i.e. "Jan. 2017")
-        # no_day = re.compile("(\\w+,? \\d{4})")
-
         # numerical date style (i.e. "1/1/2017")
         num_date = re.compile("(\\d{1,2}/\\d{1,2}/\\d{2,4})")
 
@@ -87,11 +69,9 @@ class Annotator:
         year_matches = year.findall(doc.text)
 
         us_full_date_matches = us_full_date.findall(doc.text)
-        # eu_full_date_matches = eu_full_date.findall(doc.text)
-
-        # no_day_matches = no_day.findall(doc.text)
 
         num_date_matches = num_date.findall(doc.text)
+
         num_date_no_day_matches = num_date_no_day.findall(doc.text)
 
         # -- Find max date --
@@ -100,56 +80,69 @@ class Annotator:
         max_year = (max(map(int, year_matches)) if len(year_matches) > 0 else -1, -1, -1)
 
         # convert US date structure to standardized date structure
-        us_dates_split = [re.split("[,]? ", d) for d in us_full_date_matches]
-        us_dates = [(int(d[2]), month_converter(d[0]), int(d[1])) for d in us_dates_split]
+        us_dates = self._standardize_dates(us_full_date_matches, date_type="usa")
         max_us_date = max(us_dates) if len(us_dates) > 0 else (-1, -1, -1)
 
-        # eu_dates_split = [re.split("[,]? ", d) for d in eu_full_date_matches]
-        # print("EU date: " + str(eu_dates_split))
-        # eu_dates = [(int(d[2]), month_converter(d[1]), int(d[0])) for d in eu_dates_split]
-        # max_eu_date = max(eu_dates) if len(eu_dates) > 0 else -1
-
-        # no_day_split = [re.split("[,]? ", d) for d in no_day_matches]
-        # print("No day date: " + str(no_day_split))
-        # no_day_dates = [(int(d[1]), int(d[0]), -1) for d in no_day_split]
-        # max_no_day_date = max(no_day_dates) if len(no_day_dates) > 0 else -1
-
-        num_date_split = [d.split("/") for d in num_date_matches]
-        num_dates = [(int(d[2]), int(d[1]), int(d[0])) for d in num_date_split]
+        num_dates = self._standardize_dates(num_date_matches, date_type="num")
         num_date_max = max(num_dates) if len(num_dates) > 0 else (-1, -1, -1)
 
-        num_date_no_day_split = [d.split("/") for d in num_date_no_day_matches]
-        num_dates_incomp = [(int(d[1]), int(d[0]), -1) for d in num_date_no_day_split]
+        num_dates_incomp = self._standardize_dates(num_date_no_day_matches, date_type="num_inc")
         num_date_incomp_max = max(num_dates_incomp) if len(num_dates_incomp) > 0 else (-1, -1, -1)
 
         return max((max_year, max_us_date, num_date_max, num_date_incomp_max))
 
+    def _split_dates(self, dates, date_type="usa"):
+        regex = None
 
-def month_converter(month: str) -> int:
-    m_lowered = month.lower()
-    if m_lowered in ["jan", "jan.", "january"]:
-        return 1
-    elif m_lowered in ["feb", "feb.", "february"]:
-        return 2
-    elif m_lowered in ["mar", "mar.", "march"]:
-        return 3
-    elif m_lowered in ["apr", "apr.", "april"]:
-        return 4
-    elif m_lowered == "may":
-        return 5
-    elif m_lowered in ["jun", "jun.", "june"]:
-        return 6
-    elif m_lowered in ["jul", "jul.", "july"]:
-        return 7
-    elif m_lowered in ["aug", "aug.", "august"]:
-        return 8
-    elif m_lowered in ["sept", "sept.", "september"]:
-        return 9
-    elif m_lowered in ["oct", "oct.", "october"]:
-        return 10
-    elif m_lowered in ["nov", "nov.", "november"]:
-        return 11
-    elif m_lowered in ["dec", "dec.", "december"]:
-        return 12
-    else:
-        return -1
+        if date_type == "usa":
+            regex = "[,]? "
+        if date_type == "num" or date_type == "num_inc":
+            regex = "/"
+
+        return [re.split(regex, d) for d in dates]
+
+    def _standardize_dates(self, dates, date_type="usa"):
+        split_dates = self._split_dates(dates, date_type=date_type)
+        return [self._standardize_date(d, date_type) for d in split_dates]
+
+    def _standardize_date(self, date, date_type="usa"):
+        std_date = None
+
+        if date_type == "usa":
+            std_date = (int(date[2]), self._convert_month(date[0]), int(date[1]))
+        elif date_type == "num":
+            std_date = (int(date[2]), int(date[1]), int(date[0]))
+        elif date_type == "num_inc":
+            std_date = (int(date[1]), int(date[0]), -1)
+
+        return std_date
+
+    def _convert_month(self, month: str) -> int:
+        m_lowered = month.lower()
+
+        if m_lowered in ["jan", "jan.", "january"]:
+            return 1
+        elif m_lowered in ["feb", "feb.", "february"]:
+            return 2
+        elif m_lowered in ["mar", "mar.", "march"]:
+            return 3
+        elif m_lowered in ["apr", "apr.", "april"]:
+            return 4
+        elif m_lowered == "may":
+            return 5
+        elif m_lowered in ["jun", "jun.", "june"]:
+            return 6
+        elif m_lowered in ["jul", "jul.", "july"]:
+            return 7
+        elif m_lowered in ["aug", "aug.", "august"]:
+            return 8
+        elif m_lowered in ["sept", "sept.", "september"]:
+            return 9
+        elif m_lowered in ["oct", "oct.", "october"]:
+            return 10
+        elif m_lowered in ["nov", "nov.", "november"]:
+            return 11
+        elif m_lowered in ["dec", "dec.", "december"]:
+            return 12
+        else:
+            return -1

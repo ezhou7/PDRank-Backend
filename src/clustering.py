@@ -1,9 +1,8 @@
-import numpy as np
 from typing import List
 
 from scipy.cluster.vq import vq, kmeans, whiten
 
-from structure import Document
+from structure import *
 
 
 class DocumentClustering:
@@ -15,7 +14,6 @@ class DocumentClustering:
         self.k = k if k != -1 else (7 if len(docs) >= 7 else len(docs))
 
         self.w2i_map = {}
-        self.counter = 0
 
         self._update_state()
 
@@ -26,15 +24,11 @@ class DocumentClustering:
 
             self.buffer = []
 
-            self._standardize()
-            self._k_means()
+            self._update_state()
 
     def _standardize(self):
-        for doc in self.docs:
-            for word in doc.bow_map.keys():
-                if word not in self.w2i_map:
-                    self.w2i_map[word] = self.counter
-                    self.counter += 1
+        word_list = list(set().union(*[d.bow_map.keys() for d in self.docs]))
+        self.w2i_map = {w: i for i, w in enumerate(word_list)}
 
         for d in self.docs:
             d.vectorize(self.w2i_map)
@@ -58,8 +52,17 @@ class DocumentClustering:
         code_book, _ = kmeans(whitened, self.k)
         cluster_nums, _ = vq(whitened, code_book)
 
-        self.clusters = [[] for _ in range(len(set(cluster_nums)))]
+        print(cluster_nums)
+
+        clusters = [[] for _ in range(len(set(cluster_nums)))]
+        self.clusters = []
 
         for i, c_num in enumerate(cluster_nums):
-            self.docs[i].cluster = c_num
-            self.clusters[c_num].append(self.docs[i])
+            clusters[c_num].append(self.docs[i])
+
+        for c_id, cluster in zip(cluster_nums, clusters):
+            c_obj = Cluster(c_id, cluster)
+            self.clusters.append(c_obj)
+
+            for doc in cluster:
+                doc.cluster = c_obj

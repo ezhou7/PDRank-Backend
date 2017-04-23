@@ -1,6 +1,13 @@
 import spacy
 import numpy as np
-import pickle
+from enum import IntEnum
+from collections import Counter
+
+
+class DateIndex(IntEnum):
+    day = 2
+    month = 1
+    year = 0
 
 
 class Document:
@@ -11,6 +18,10 @@ class Document:
         self.title = None
         self.date = None
         self.cluster = None
+
+    def __str__(self):
+        date = "%d/%d/%d" % (self.date[DateIndex.month], self.date[DateIndex.day], self.date[DateIndex.year])
+        return "Title: %s, Date: %s" % (self.title, date)
 
     def import_text(self, text):
         self.text = text
@@ -27,15 +38,7 @@ class Document:
         eng_model = spacy.load("en")
         doc = eng_model(self.text)
 
-        self.bow_map = dict()
-
-        for token in doc:
-            if not token.is_stop:
-                stripped = token.lemma_.strip()
-                if token.lemma_ not in self.bow_map:
-                    self.bow_map[stripped] = 1
-                else:
-                    self.bow_map[stripped] += 1
+        self.bow_map = Counter([t.lemma_.strip() for t in doc if not t.is_stop])
 
     def vectorize(self, word_index_map):
         self.bow_vec = np.zeros(shape=(len(word_index_map),))
@@ -45,9 +48,22 @@ class Document:
 
 
 class Cluster:
-    def __init__(self, docs=None):
+    def __init__(self, c_id=-1, docs=None):
+        self.c_id = c_id
         self.docs = docs
         self.aggr_vec = self._aggregate()
+
+    def __str__(self):
+        return "Cluster ID: %d, Cluster Docs: %s" % (self.c_id, self._stringify_docs())
+
+    def _stringify_docs(self):
+        if len(self.docs) > 10:
+            docs_head = ", ".join([d.title for d in self.docs[:3]])
+            docs_tail = ", ".join([d.title for d in self.docs[-3:]])
+
+            return "[%s, ..., %s]" % (docs_head, docs_tail)
+        else:
+            return str([str(d) for d in self.docs])
 
     def _aggregate(self):
         if len(self.docs) == 0:
@@ -55,26 +71,3 @@ class Cluster:
 
         doc_stack = np.vstack([doc.bow_vec for doc in self.docs])
         return np.sum(doc_stack, axis=0)
-
-
-class PersistentIndexMap:
-    @staticmethod
-    def save_map(obj_map, obj_out):
-        pickle.dump(obj_map, obj_out)
-
-    @staticmethod
-    def load_map(obj_path):
-        return pickle.load(obj_path)
-
-
-def aggregate_maps(maps):
-    aggr_map = dict()
-
-    i = 0
-    for map in maps:
-        for key in map.keys():
-            if key not in aggr_map:
-                aggr_map[key] = i
-                i += 1
-
-    return aggr_map
