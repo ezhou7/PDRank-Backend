@@ -35,11 +35,9 @@ class MainDriver:
 
         buf = []
         for line in fin:
-            # print(line)
             buf.append(line.strip())
 
         data = "".join(buf)
-        # print(data)
 
         fin.close()
 
@@ -52,8 +50,6 @@ class MainDriver:
             c = self._processor.fetch_cluster(user_input)
 
             if c:
-                # for doc in c.docs:
-                    # print(doc.doc_path)
                 fout = open(self._output_path, "w")
 
                 for doc in c.docs:
